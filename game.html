@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>De CodeKamer - Quiz</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      padding: 30px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #timer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer"></div>
+
+  <h1>Python Quiz</h1>
+  <p>Om te ontsnappen moet je alle onderstaande antwoorden goed beantwoorden. Zo niet, dan blijven jullie hier voor altijd!!!</p>
+
+  <div id="quiz-box">
+    <p id="question"></p>
+    <input type="text" id="answer" placeholder="Typ je antwoord hier..." autocomplete="off" />
+    <button class="btn" onclick="submitAnswer()">Verstuur</button>
+    <p id="feedback" class="feedback"></p>
+  </div>
+
+  <div id="result" style="display:none;">
+    <h2>Je score: <span id="score"></span> / <span id="total"></span></h2>
+    <p id="result-message"></p>
+  </div>
+
+  <script>
+    let totalTime = 20 * 60;
+    let timerInterval;
+    const timerElement = document.getElementById('timer');
+
+    startTimer();
+
+    function startTimer() {
+      const savedTime = sessionStorage.getItem('escapeTimer');
+      if (savedTime) {
+        totalTime = parseInt(savedTime, 10);
+      }
+
+      updateTimerDisplay();
+
+      timerInterval = setInterval(() => {
+        totalTime--;
+        sessionStorage.setItem('escapeTimer', totalTime);
+        updateTimerDisplay();
+
+        if (totalTime <= 0) {
+          clearInterval(timerInterval);
+          sessionStorage.removeItem('escapeTimer');
+          window.location.href = "verloren.html";
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(totalTime / 60);
+      const seconds = totalTime % 60;
+      timerElement.textContent = `Tijd over: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    const quiz = [
+      ["Wat is de correcte syntax voor de output Hello World in Python", 'print("Hello World")'],
+      ["Hoe insert je COMMENTS in Python", "#"],
+      ["Hoe maak je een lijst in Python", "list = [1, 2, 3]"],
+      ["Wat voor type functie is 'Hello World'?", "string"],
+      ["Wat functie gebruik je om de lengte van een lijst te vinden", "len"],
+      ["Wat is de correcte manier om iets te printen in Python", 'print("")'],
+    ];
+
+    const goodMessages = ["Good", "Great", "Fantastic", "You're doing well"];
+    let current = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById("question");
+    const answerEl = document.getElementById("answer");
+    const feedbackEl = document.getElementById("feedback");
+    const resultBox = document.getElementById("result");
+    const scoreEl = document.getElementById("score");
+    const totalEl = document.getElementById("total");
+    const resultMsgEl = document.getElementById("result-message");
+
+    function showQuestion() {
+      questionEl.textContent = (current + 1) + ". " + quiz[current][0];
+      answerEl.value = "";
+      feedbackEl.textContent = "";
+      answerEl.focus();
+    }
+
+    function submitAnswer() {
+      const userAnswer = answerEl.value.trim();
+      const correctAnswer = quiz[current][1];
+
+      if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+        score++;
+        feedbackEl.textContent = goodMessages[Math.floor(Math.random() * goodMessages.length)] + "!";
+        feedbackEl.style.color = "lightgreen";
+
+        current++;
+
+        if (current < quiz.length) {
+          setTimeout(showQuestion, 1000);
+        } else {
+          document.getElementById("quiz-box").style.display = "none";
+          resultBox.style.display = "block";
+          scoreEl.textContent = score;
+          totalEl.textContent = quiz.length;
+
+          if (score === quiz.length) {
+            resultMsgEl.textContent = "Perfect! Je gaat door naar de volgende puzzel...";
+            clearInterval(timerInterval);
+            sessionStorage.setItem('escapeTimer', totalTime);
+            setTimeout(() => {
+              window.location.href = "cross.html";
+            }, 3000);
+          } else {
+            resultMsgEl.textContent = "Niet alles goed. Probeer opnieuw om verder te gaan!";
+          }
+        }
+      } else {
+        feedbackEl.textContent = "Fout antwoord. Probeer het opnieuw.";
+        feedbackEl.style.color = "crimson";
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>

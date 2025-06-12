@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Helaas, tijd verstreken!</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      color: #f00;
+      text-shadow: 0 0 10px #f00;
+    }
+    .btn {
+      padding: 15px 30px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Helaas, de tijd is verstreken!</h1>
+  <p>Je hebt niet op tijd kunnen ontsnappen uit de CodeKamer.</p>
+  <a href="index.html" class="btn">Probeer Opnieuw</a>
+  
+  <script>
+    sessionStorage.removeItem('escapeTimer');
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timeout - Even wachten</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: monospace;
+      background: linear-gradient(135deg, #530c0c, #4B0000);
+      color: #FFD2D2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #330000;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #990000;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px #ff4444;
+    }
+    #escapeTimer, #waitTimer {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px #ff6666;
+    }
+    .btn-container {
+      margin-top: 20px;
+    }
+    button {
+      background-color: #ff4444;
+      border: none;
+      padding: 15px 35px;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      color: #ffd2d2;
+      cursor: pointer;
+      box-shadow: 0 0 15px #ff5555;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #ff6666;
+    }
+    p.info {
+      margin-top: 20px;
+      font-size: 1rem;
+      color: #ffbcbc;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Timeout</h1>
+    <div id="escapeTimer">Tijd over: 00:00</div>
+    <div id="waitTimer">Wachten tot knop: 10</div>
+    <div class="btn-container" id="buttonContainer"></div>
+    <p class="info">Je antwoord was fout.</p>
+  </div>
+
+  <script>
+    const escapeTimerDisplay = document.getElementById('escapeTimer');
+    const waitTimerDisplay = document.getElementById('waitTimer');
+    const buttonContainer = document.getElementById('buttonContainer');
+
+    let escapeTime = parseInt(sessionStorage.getItem('escapeTimer')) || 60;
+    let waitTime = 10;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function updateEscapeTimer() {
+      escapeTimerDisplay.textContent = `Tijd over: ${formatTime(escapeTime)}`;
+    }
+
+    function updateWaitTimer() {
+      waitTimerDisplay.textContent = `${waitTime}`;
+    }
+
+    function createReturnButton() {
+      const btn = document.createElement('button');
+      btn.textContent = 'Probeer Opnieuw';
+      btn.addEventListener('click', () => {
+        window.location.href = 'raden.html';
+      });
+      buttonContainer.appendChild(btn);
+    }
+
+    function startTimers() {
+      updateEscapeTimer();
+      updateWaitTimer();
+
+      const interval = setInterval(() => {
+        // Escape timer
+        if (escapeTime > 0) {
+          escapeTime--;
+          sessionStorage.setItem('escapeTimer', escapeTime);
+          updateEscapeTimer();
+        }
+
+        // Wacht timer
+        if (waitTime > 0) {
+          waitTime--;
+          updateWaitTimer();
+
+          if (waitTime === 0) {
+            waitTimerDisplay.textContent = '';
+            createReturnButton();
+          }
+        }
+
+        // Stop als escape op is
+        if (escapeTime <= 0) {
+          clearInterval(interval);
+          waitTimerDisplay.textContent = 'Tijd op!';
+        }
+      }, 1000);
+    }
+
+    startTimers();
+  </script>
+</body>
+</html>

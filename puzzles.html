@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>De CodeKamer - Puzzels</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000 0%, #002200 100%);
+            color: #39ff14;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 0;
+        }
+        
+        h1, h2 {
+            color: #39ff14;
+            text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14, 0 0 20px #32cd32, 0 0 30px #32cd32;
+            margin-bottom: 20px;
+        }
+        
+        .woord {
+            font-size: 3rem;
+            letter-spacing: 15px;
+            margin: 30px 0;
+            user-select: none;
+            text-shadow: 0 0 8px #39ff14;
+        }
+        
+        form {
+            margin-top: 20px;
+        }
+        
+        input[type="text"] {
+            width: 50px;
+            font-size: 2rem;
+            text-align: center;
+            background-color: #001100;
+            border: 2px solid #39ff14;
+            border-radius: 6px;
+            color: #39ff14;
+            box-shadow: 0 0 5px #39ff14, inset 0 0 5px #39ff14;
+            transition: background-color 0.3s ease;
+            padding: 0.5rem;
+        }
+        
+        input[type="text"]:focus {
+            background-color: #003300;
+            outline: none;
+        }
+        
+        button {
+            background-color: #001100;
+            color: #39ff14;
+            border: 2px solid #39ff14;
+            border-radius: 6px;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 0 8px #39ff14;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #39ff14;
+            color: #000;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+            text-shadow: 0 0 5px #39ff14;
+        }
+        
+        .poging {
+            color: red;
+            text-shadow: 0 0 20px red;
+        }
+        
+        .verloren {
+            color: red;
+            text-shadow: 0 0 20px red; 
+        }
+        
+        .reset {
+            margin-top: 100px;
+        }
+        
+        .groene_tekst {
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        
+        .rode_tekst {
+            font-weight: bold;
+            color: #FF0000;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px #FF0000;
+        }
+        
+        #timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="timer">Tijd over: 20:00</div>
+    
+    <div id="galgje" class="puzzle">
+        <h1>Galgje</h1>
+        <h2>Raad het Engelse woord</h2>
+
+        <p class="woord" id="woordWeergave">_ _ _ _ _</p>
+        <p class="poging">Foute pogingen: <span id="fouten">0</span> / <span id="maxFouten">6</span></p>
+
+        <div id="gewonnen" class="hidden">
+            <h2>01101000 01100001 01100011 01101011 01100101 01110010</h2>
+            <button id="naarCode">Ga naar code-invoer</button>
+        </div>
+
+        <div id="verloren" class="hidden">
+            <h2 class="verloren">Je hebt te vaak fout geraden, probeer het opnieuw</h2>
+            <button id="resetGalgje">Probeer Opnieuw</button>
+        </div>
+
+        <form id="galgjeForm">
+            <label>Raad een letter:
+                <input type="text" id="letter" maxlength="1" required autofocus>
+            </label>
+            <button type="submit">OK</button>
+        </form>
+    </div>
+
+    <div id="code" class="puzzle hidden">
+        <h1>Voer de code in</h1>
+
+        <div id="error" class="rode_tekst hidden"></div>
+
+        <form id="codeForm">
+            <label for="codeInput">Code:</label>
+            <input type="text" id="codeInput" required autocomplete="off" style="width: 250px; font-size: 1.5rem;" />
+            <button type="submit">Verzenden</button>
+        </form>
+    </div>
+
+    <div id="success" class="puzzle hidden">
+        <h1>Code is correct!</h1>
+        <div class="groene_tekst">
+            <p>Je hebt de escaperoom gehaald binnen de tijd.</p>
+        </div>
+        <a href="index.html" class="btn">Terug naar start</a>
+    </div>
+
+    <div id="lost" class="puzzle hidden">
+        <h1 style="color: red; text-shadow: 0 0 5px #FF0000;">Helaas, je hebt verloren!</h1>
+        <a href="index.html" class="btn">Probeer Opnieuw</a>
+    </div>
+
+    <script>
+        const timerElement = document.getElementById('timer');
+        let totalTime = 20 * 60; 
+        let timerInterval;
+        
+
+        function startTimer() {
+            const savedTime = sessionStorage.getItem('escapeTimer');
+            if (savedTime !== null) {
+                totalTime = parseInt(savedTime, 10);
+            }
+            
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                totalTime--;
+                sessionStorage.setItem('escapeTimer', totalTime);
+                updateTimerDisplay();
+                
+                if (totalTime <= 0) {
+                    clearInterval(timerInterval);
+                    sessionStorage.removeItem('escapeTimer');
+                    showPuzzle('lost');
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            timerElement.textContent = `Tijd over: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        
+        const woorden = ["bytes", "pixel", "cloud", "cache", "login", "debug"];
+        let woord = '';
+        let geraden = [];
+        let fouten = 0;
+        const maxFouten = 6;
+        
+        function initGalgje() {
+            woord = woorden[Math.floor(Math.random() * woorden.length)];
+            geraden = [];
+            fouten = 0;
+            updateGalgjeWeergave();
+            document.getElementById('fouten').textContent = '0';
+            document.getElementById('gewonnen').classList.add('hidden');
+            document.getElementById('verloren').classList.add('hidden');
+            document.getElementById('galgjeForm').classList.remove('hidden');
+        }
+        
+        function updateGalgjeWeergave() {
+            let weergave = "";
+            let gewonnen = true;
+            
+            for (let i = 0; i < woord.length; i++) {
+                if (geraden.includes(woord[i])) {
+                    weergave += woord[i] + " ";
+                } else {
+                    weergave += "_ ";
+                    gewonnen = false;
+                }
+            }
+            
+            document.getElementById('woordWeergave').textContent = weergave;
+            document.getElementById('fouten').textContent = fouten;
+            
+            if (gewonnen) {
+                document.getElementById('gewonnen').classList.remove('hidden');
+                document.getElementById('galgjeForm').classList.add('hidden');
+            } else if (fouten >= maxFouten) {
+                document.getElementById('verloren').classList.remove('hidden');
+                document.getElementById('galgjeForm').classList.add('hidden');
+            }
+        }
+        
+        function showPuzzle(name) {
+            document.querySelectorAll('.puzzle').forEach(p => p.classList.add('hidden'));
+            
+            if (name === 'galgje') {
+                document.getElementById('galgje').classList.remove('hidden');
+                initGalgje();
+            } else if (name === 'code') {
+                document.getElementById('code').classList.remove('hidden');
+            } else if (name === 'success') {
+                document.getElementById('success').classList.remove('hidden');
+                clearInterval(timerInterval);
+                sessionStorage.removeItem('escapeTimer');
+            } else if (name === 'lost') {
+                document.getElementById('lost').classList.remove('hidden');
+                clearInterval(timerInterval);
+                sessionStorage.removeItem('escapeTimer');
+            }
+        }
+        
+        document.getElementById('galgjeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const letter = document.getElementById('letter').value.toLowerCase();
+            document.getElementById('letter').value = '';
+            
+            if (!geraden.includes(letter)) {
+                geraden.push(letter);
+                if (!woord.includes(letter)) {
+                    fouten++;
+                }
+                updateGalgjeWeergave();
+            }
+        });
+        
+        document.getElementById('naarCode').addEventListener('click', function() {
+            showPuzzle('code');
+        });
+        
+        document.getElementById('resetGalgje').addEventListener('click', function() {
+            initGalgje();
+        });
+        
+        document.getElementById('codeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const inputCode = document.getElementById('codeInput').value.toLowerCase();
+            document.getElementById('codeInput').value = '';
+            
+            if (inputCode === 'hacker') {
+                showPuzzle('success');
+            } else {
+                document.getElementById('error').textContent = 
+                    "De ingevoerde code is onjuist. Probeer het opnieuw.";
+                document.getElementById('error').classList.remove('hidden');
+            }
+        });
+        
+        startTimer();
+        showPuzzle('galgje');
+    </script>
+</body>
+</html>

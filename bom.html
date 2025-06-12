@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cut the Wire - Bomb Game</title>
+<style>
+  body {
+    font-family: monospace;
+    background: #111;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin:0;
+  }
+  h1 {
+    margin-bottom: 20px;
+    text-shadow: 0 0 8px #44aaff;
+  }
+  #timer {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-shadow: 0 0 6px #00ccff;
+  }
+  .wires {
+    display: flex;
+    gap: 20px;
+    flex-direction: column; /* Verticale layout */
+    align-items: center;
+  }
+  button.wire {
+    width: 200px;
+    height: 30px;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    color: #111;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    text-align: center;
+    padding: 0;
+  }
+  /* Draad textuur */
+  button.wire::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.1) 0%,
+      rgba(255,255,255,0.3) 50%,
+      rgba(255,255,255,0.1) 100%
+    );
+    background-size: 200% 100%;
+    animation: shine 2s infinite;
+  }
+  @keyframes shine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  button.wire.blue {
+    background: linear-gradient(90deg, #0a3d7a, #1976d2, #64b5f6);
+  }
+  button.wire.green {
+    background: linear-gradient(90deg, #1b5e20, #388e3c, #81c784);
+  }
+  button.wire.red {
+    background: linear-gradient(90deg, #b71c1c, #d32f2f, #f44336);
+  }
+  button.wire.blank {
+    background: linear-gradient(90deg, #555, #888, #aaa);
+    color: #eee;
+  }
+  button.wire:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+  }
+  button.wire:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  button.wire:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+  }
+  button.wire.cut {
+    opacity: 0.3;
+    background: #333;
+    position: relative;
+  }
+  button.wire.cut::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #eee;
+    transform: rotate(-5deg);
+  }
+  #message {
+    margin-top: 20px;
+    font-size: 1.4rem;
+    height: 1.5em;
+    text-align: center;
+    min-width: 300px;
+  }
+  #timeoutContainer {
+    margin-top: 30px;
+    background: #330000;
+    color: #ff9999;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #990000;
+    font-size: 1.2rem;
+    text-align: center;
+    display: none;
+    user-select: none;
+  }
+  #timeoutContainer button {
+    margin-top: 15px;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    border: none;
+    background-color: #ff4444;
+    border-radius: 8px;
+    color: #ffd2d2;
+    cursor: pointer;
+    box-shadow: 0 0 15px #ff5555;
+    transition: background-color 0.3s ease;
+  }
+  #timeoutContainer button:hover {
+    background-color: #ff6666;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cut the Wire - Bomb Game</h1>
+<div id="timer">Tijd over: 20:00</div>
+
+<div class="wires">
+  <button class="wire blue" id="blueWire">Blauwe draad</button>
+  <button class="wire green" id="greenWire">Groene draad</button>
+  <button class="wire red" id="redWire">Rode draad</button>
+  <button class="wire blank" id="blankWire">Blanco draad</button>
+</div>
+
+<div id="message"></div>
+
+<div id="timeoutContainer">
+  <p>Je hebt de verkeerde draad geknipt of de tijd is op.</p>
+  <p>Wacht tot je het opnieuw kunt proberen: <span id="cooldownTimer">20</span> seconden</p>
+  <button id="retryBtn" style="display:none;">Probeer opnieuw</button>
+</div>
+
+<script>
+    const timerElement = document.getElementById('timer');
+    const messageEl = document.getElementById('message');
+    const timeoutContainer = document.getElementById('timeoutContainer');
+    const cooldownTimerEl = document.getElementById('cooldownTimer');
+    const retryBtn = document.getElementById('retryBtn');
+  
+    const blueWire = document.getElementById('blueWire');
+    const greenWire = document.getElementById('greenWire');
+    const redWire = document.getElementById('redWire');
+    const blankWire = document.getElementById('blankWire');
+  
+    let gameActive = true;
+    let correctWire = '';
+    let explodeWire = '';
+    let safeWires = [];
+  
+    // Randomize wire effects at game start
+    function randomizeWires() {
+      const wires = ['blueWire', 'greenWire', 'redWire', 'blankWire'];
+      // Shuffle array
+      wires.sort(() => Math.random() - 0.5);
+      
+      // Assign random roles
+      correctWire = wires[0]; // Wire that defuses the bomb
+      explodeWire = wires[1]; // Wire that explodes the bomb
+      safeWires = [wires[2], wires[3]]; // Safe wires (do nothing)
+      
+      console.log(`Correct: ${correctWire}, Explode: ${explodeWire}, Safe: ${safeWires}`);
+    }
+  
+    // Escape timer vanuit sessionStorage
+    let escapeTime = 20 * 60;
+    const savedEscapeTime = sessionStorage.getItem('escapeTimer');
+    if (savedEscapeTime !== null) {
+      escapeTime = parseInt(savedEscapeTime, 10);
+    }
+  
+    // BombTimer lokaal
+    let bombTime = 20;
+  
+    function updateTimerDisplay() {
+      const minutes = Math.floor(escapeTime / 60);
+      const seconds = escapeTime % 60;
+      timerElement.textContent = `Tijd over: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+  
+    function disableWires() {
+      [blueWire, greenWire, redWire, blankWire].forEach(btn => {
+        btn.disabled = true;
+        if (!btn.classList.contains('cut')) {
+          btn.classList.add('cut');
+        }
+      });
+    }
+  
+    function enableWires() {
+      [blueWire, greenWire, redWire, blankWire].forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('cut');
+      });
+    }
+  
+    function handleWireClick(id) {
+      if (!gameActive) return;
+      
+      // Mark the wire as cut
+      document.getElementById(id).classList.add('cut');
+      
+      if (id === explodeWire) {
+        // Verkeerde draad
+        gameActive = false;
+        messageEl.textContent = 'BOEM! Je hebt de bom laten ontploffen!';
+        disableWires();
+        startCooldown(20);
+      } else if (id === correctWire) {
+        // Juiste draad
+        messageEl.textContent = 'Je hebt de bom succesvol gediffuseerd! Je gaat door naar de volgende puzzel.';
+        disableWires();
+        clearInterval(timerInterval);
+        setTimeout(() => {
+          window.location.href = 'puzzles.html';
+        }, 2500);
+      } else {
+        // Veilige draad
+        messageEl.textContent = 'Deze draad is veilig. Kies zorgvuldig!';
+        document.getElementById(id).disabled = true;
+      }
+    }
+  
+    // Initialize game
+    randomizeWires();
+    blueWire.addEventListener('click', () => handleWireClick('blueWire'));
+    greenWire.addEventListener('click', () => handleWireClick('greenWire'));
+    redWire.addEventListener('click', () => handleWireClick('redWire'));
+    blankWire.addEventListener('click', () => handleWireClick('blankWire'));
+  
+    function startCooldown(seconds) {
+      timeoutContainer.style.display = 'block';
+      let timeLeft = seconds;
+      cooldownTimerEl.textContent = timeLeft;
+      retryBtn.style.display = 'none';
+  
+      const cooldownInterval = setInterval(() => {
+        timeLeft--;
+        cooldownTimerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(cooldownInterval);
+          retryBtn.style.display = 'inline-block';
+        }
+      }, 1000);
+    }
+  
+    retryBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('bombTimer');
+      window.location.reload(); // Herlaad de pagina voor een nieuw spel
+    });
+  
+    // Timer logica
+    updateTimerDisplay();
+    const timerInterval = setInterval(() => {
+      // escapeTimer controleren
+      if (escapeTime <= 0) {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('escapeTimer');
+        window.location.href = 'verloren.html';
+        return;
+      }
+  
+      escapeTime--;
+      sessionStorage.setItem('escapeTimer', escapeTime);
+  
+      // bombTimer (alleen als game actief is)
+      if (gameActive) {
+        if (bombTime > 0) {
+          bombTime--;
+        } else {
+          gameActive = false;
+          messageEl.textContent = 'Tijd is op! Je hebt de bom niet kunnen diffusen.';
+          disableWires();
+          startCooldown(20);
+        }
+      }
+  
+      updateTimerDisplay();
+    }, 1000);
+</script>
+</body>
+</html>

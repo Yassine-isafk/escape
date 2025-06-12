@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Correct</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: monospace;
+      background: linear-gradient(135deg, #0b3d0b, #002b00);
+      color: #d2ffd2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #003300;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00cc00;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+      text-shadow: 0 0 8px #33ff33;
+    }
+    #escapeTimer {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #66ff66;
+    }
+    button {
+      background-color: #33aa33;
+      border: none;
+      padding: 15px 35px;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      color: #d2ffd2;
+      cursor: pointer;
+      box-shadow: 0 0 15px #44ff44;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #55cc55;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Correct</h1>
+    <div id="escapeTimer">Tijd over: 00:00</div>
+    <button onclick="window.location.href='bom.html'">Verder</button>
+  </div>
+
+  <script>
+    const escapeTimerDisplay = document.getElementById('escapeTimer');
+    let escapeTime = parseInt(sessionStorage.getItem('escapeTimer')) || 60;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function updateEscapeTimer() {
+      escapeTimerDisplay.textContent = `Tijd over: ${formatTime(escapeTime)}`;
+    }
+
+    updateEscapeTimer();
+    const timer = setInterval(() => {
+      if (escapeTime > 0) {
+        escapeTime--;
+        sessionStorage.setItem('escapeTimer', escapeTime);
+        updateEscapeTimer();
+      } else {
+        clearInterval(timer);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

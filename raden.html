@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Code Fout Zoekspel per Letter</title>
+<style>
+  body {
+    font-family: monospace, monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 20px;
+  }
+  pre {
+    background: #252526;
+    padding: 15px;
+    border-radius: 8px;
+    user-select: none;
+    max-width: 700px;
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .letter {
+    cursor: pointer;
+    padding: 0 1px;
+    border-radius: 2px;
+    user-select: none;
+  }
+  .letter:hover {
+    background-color: #3e3e42;
+  }
+  #message {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  #hint {
+    margin-top: 40px;
+    font-size: 14px;
+    color: #999999;
+    font-style: italic;
+    max-width: 700px;
+  }
+  #timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 12px;
+    border-radius: 5px;
+    color: #39ff14;
+    font-family: 'Courier New', Courier, monospace;
+  }
+</style>
+</head>
+<body>
+
+<h2>Klik op de letter die de fout bevat in onderstaande JavaScript-code</h2>
+
+<div id="timer">Tijd over: 20:00</div>
+
+<pre id="code-block"></pre>
+
+<div id="message"></div>
+
+<div id="hint">Hint: <code>// Dit is een code</code> wordt gezien als commentaar</div>
+
+<script>
+  // Timer setup
+  const timerElement = document.getElementById('timer');
+  let totalTime = 20 * 60; // 20 minuten in seconden
+
+  // Haal opgeslagen tijd op, of start nieuw
+  const savedTime = sessionStorage.getItem('escapeTimer');
+  if (savedTime !== null) {
+    totalTime = parseInt(savedTime, 10);
+  }
+
+  function updateTimerDisplay() {
+    const minutes = Math.floor(totalTime / 60);
+    const seconds = totalTime % 60;
+    timerElement.textContent = `Tijd over: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
+
+  function tick() {
+    if (totalTime <= 0) {
+      sessionStorage.removeItem('escapeTimer');
+      window.location.href = 'verloren.html'; // pas aan naar jouw verloren pagina
+      return;
+    }
+    totalTime--;
+    sessionStorage.setItem('escapeTimer', totalTime);
+    updateTimerDisplay();
+  }
+
+  updateTimerDisplay();
+  setInterval(tick, 1000);
+
+  // Code wrapping en kliklogica
+  const rawCode = `
+function calculateSum(numbers) {
+  let sum = 0;
+  for (let i = 0; i < numbers.length<fault>/</fault>; i++) {
+    sum += numbers[i];
+  }
+  return sum;
+}
+`;
+
+  function wrapLetters(code) {
+    const faultStart = code.indexOf('<fault>');
+    const faultEnd = code.indexOf('</fault>');
+
+    let result = '';
+
+    for (let i = 0; i < code.length; i++) {
+      if (i === faultStart) {
+        i += 6; 
+        continue;
+      }
+      if (i === faultEnd) {
+        i += 7; 
+        continue;
+      }
+
+      let char = code[i];
+      const inFault = (faultStart !== -1 && faultEnd !== -1 && i > faultStart && i < faultEnd);
+
+      let displayChar = char;
+      if (char === ' ') displayChar = '\u00A0';
+      if (char === '\n') {
+        result += '\n';
+        continue;
+      }
+
+      result += `<span class="letter" data-fault="${inFault ? 'true' : 'false'}">${displayChar}</span>`;
+    }
+
+    return result;
+  }
+
+  const codeBlock = document.getElementById('code-block');
+  const message = document.getElementById('message');
+
+  codeBlock.innerHTML = wrapLetters(rawCode);
+
+  codeBlock.querySelectorAll('.letter').forEach(letter => {
+    letter.addEventListener('click', () => {
+      const isFault = letter.getAttribute('data-fault') === 'true';
+      if (isFault) {
+        window.location.href = "Correct.html";
+      } else {
+        window.location.href = "timeout.html";
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

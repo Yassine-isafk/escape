@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kruiswoordpuzzel IT VMBO</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e6e6e6;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #4cc9f0;
+      text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: #a9a9a9;
+    }
+    
+    .game-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .puzzle-section {
+      flex: 1;
+      min-width: 300px;
+      background: rgba(30, 30, 46, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hints-section {
+      flex: 1;
+      min-width: 300px;
+      background: rgba(30, 30, 46, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #f72585;
+      border-bottom: 2px solid #4361ee;
+      padding-bottom: 10px;
+    }
+    
+    .crossword {
+      display: grid;
+      grid-template-columns: repeat(6, 50px);
+      grid-gap: 4px;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    
+    .cell {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #4361ee;
+      border-radius: 4px;
+    }
+    
+    .cell input {
+      width: 100%;
+      height: 100%;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      background: transparent;
+      color: #4cc9f0;
+      border: none;
+      outline: none;
+    }
+    
+    .block {
+      background: rgba(67, 97, 238, 0.3);
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+    }
+    
+    .number {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #f72585;
+    }
+    
+    .hint {
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    
+    .hint:hover {
+      background: rgba(67, 97, 238, 0.2);
+      transform: translateY(-3px);
+    }
+    
+    .hint strong {
+      color: #f72585;
+    }
+    
+    .direction {
+      font-size: 0.9rem;
+      color: #4cc9f0;
+      margin-top: 3px;
+    }
+    
+    .controls {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(247, 37, 133, 0.3);
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(247, 37, 133, 0.5);
+    }
+    
+    #feedback {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      text-align: center;
+      display: none;
+    }
+    
+    .success {
+      background: rgba(76, 201, 240, 0.2);
+      color: #4cc9f0;
+      border: 2px solid #4cc9f0;
+    }
+    
+    .error {
+      background: rgba(247, 37, 133, 0.2);
+      color: #f72585;
+      border: 2px solid #f72585;
+    }
+    
+    #timer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: rgba(30, 30, 46, 0.8);
+      padding: 12px 20px;
+      border-radius: 50px;
+      color: #4cc9f0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      border: 2px solid #4361ee;
+    }
+    
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .color-box {
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+    }
+    
+    .horizontal {
+      background: rgba(76, 201, 240, 0.7);
+    }
+    
+    .vertical {
+      background: rgba(247, 37, 133, 0.7);
+    }
+    
+    @media (max-width: 768px) {
+      .game-container {
+        flex-direction: column;
+      }
+      
+      .crossword {
+        grid-template-columns: repeat(6, 40px);
+      }
+      
+      .cell {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="timer">Tijd over: 20:00</div>
+  
+  <div class="container">
+    <header>
+      <h1>Kruiswoordpuzzel: IT voor VMBO</h1>
+      <p class="subtitle">Los het kruiswoord op om te ontsnappen uit de digitale kamer!</p>
+    </header>
+    
+    <div class="game-container">
+      <div class="puzzle-section">
+        <h2 class="section-title">Kruiswoordpuzzel</h2>
+        <div class="crossword" id="puzzle">
+          <!-- Rij 0 -->
+          <div class="cell"><div class="number">1</div><input id="0-0" maxlength="1" /></div>
+          <div class="cell"><input id="0-1" maxlength="1" /></div>
+          <div class="cell"><input id="0-2" maxlength="1" /></div>
+          <div class="cell"><input id="0-3" maxlength="1" /></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          
+
+          <!-- Rij 1 -->
+          <div class="cell"><div class="number">2</div><input id="1-0" maxlength="1" /></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="number">3</div><input id="1-3" maxlength="1" /></div>
+          <div class="cell"><input id="1-4" maxlength="1" /></div>
+          <div class="cell"><input id="1-5" maxlength="1" /></div>
+
+
+          <!-- Rij 2 -->
+          <div class="cell"><input id="2-0" maxlength="1" /></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="number">4</div><input id="2-3" maxlength="1" /></div>
+          <div class="cell"><input id="2-4" maxlength="1" /></div>
+          <div class="cell"><input id="2-5" maxlength="1" /></div>
+
+          <!-- Rij 3 -->
+          <div class="cell"><div class="number">5</div><input id="3-0" maxlength="1" /></div>
+          <div class="cell"><input id="3-1" maxlength="1" /></div>
+          <div class="cell"><input id="3-2" maxlength="1" /></div>
+          <div class="cell"><input id="3-3" maxlength="1" /></div>
+          <div class="cell"><input id="3-4" maxlength="1" /></div>
+          <div class="cell"><div class="block"></div></div>
+
+          <!-- Rij 4 -->    
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="number">6</div><input id="4-2" maxlength="1" /></div>
+          <div class="cell"><input id="4-3" maxlength="1" /></div>
+          <div class="cell"><input id="4-4" maxlength="1" /></div>
+          <div class="cell"><input id="4-5" maxlength="1" /></div>
+
+          <!-- Rij 5 -->
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><input id="5-2" maxlength="1" /></div>
+          <div class="cell"><input id="5-3" maxlength="1" /></div>
+          <div class="cell"><input id="5-4" maxlength="1" /></div>
+          <div class="cell"><input id="5-5" maxlength="1" /></div>
+
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><div class="block"></div></div>
+          <div class="cell"><input id="6-2" maxlength="1" /></div>
+          <div class="cell"><input id="6-3" maxlength="1" /></div>
+          <div class="cell"><input id="6-4" maxlength="1" /></div>
+          <div class="cell"><input id="6-5" maxlength="1" /></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="color-box horizontal"></div> Horizontaal</div>
+          <div class="legend-item"><div class="color-box vertical"></div> Verticaal</div>
+        </div>
+        <div class="controls">
+          <button id="checkBtn">Controleer</button>
+        </div>
+        <div id="feedback"></div>
+      </div>
+      
+      <div class="hints-section">
+        <h2 class="section-title">Hints</h2>
+        <div class="hint"><strong>1 Horizontaal (4):</strong> Dit apparaat gebruik je om te klikken en te navigeren. <!-- MUIS --></div>
+        <div class="hint"><strong>2 Verticaal (2):</strong> Besturingssysteem van je computer. <!-- OS --></div>
+        <div class="hint"><strong>3 Horizontaal (3):</strong> Geheugen van de computer, tijdelijk. <!-- RAM --></div>
+        <div class="hint"><strong>4 Horizontaal (3):</strong> Internetadres van een website. <!-- URL --></div>
+        <div class="hint"><strong>5 Horizontaal (5):</strong> Knoppenbord van je computer. <!-- TOETS --></div>
+        <div class="hint"><strong>6 Horizontaal (4):</strong> Tekstverwerker van Microsoft. <!-- WORD --></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const answers = {
+        // 1 Horizontaal: MUIS
+        "0-0": "M",
+        "0-1": "U",
+        "0-2": "I",
+        "0-3": "S",
+      
+        // 2 Verticaal: OS
+        "1-0": "O",
+        "2-0": "S",
+      
+        // 3 Horizontaal: RAM
+        "1-3": "R",
+        "1-4": "A",
+        "1-5": "M",
+      
+        // 4 Horizontaal: URL
+        "2-3": "U",
+        "2-4": "R",
+        "2-5": "L",
+      
+        // 5 Horizontaal: TOETS
+        "3-0": "T",
+        "3-1": "O",
+        "3-2": "E",
+        "3-3": "T",
+        "3-4": "S",
+      
+        // 6 Verticaal: WORD
+        "4-2": "W",
+        "4-3": "O",
+        "4-4": "R",
+        "4-5": "D"
+    };
+    
+// Vervang het bestaande timer-script in cross.html door dit:
+
+let tijdOver = 20 * 60; // Standaardwaarde
+const timerElement = document.getElementById("timer");
+
+// Controleer of er een opgeslagen tijd is in sessionStorage
+const savedTime = sessionStorage.getItem('escapeTimer');
+if (savedTime) {
+    tijdOver = parseInt(savedTime, 10);
+}
+
+const timerInterval = setInterval(tick, 1000);
+
+function tick() {
+    const minutes = Math.floor(tijdOver / 60);
+    const seconds = tijdOver % 60;
+    timerElement.textContent = `Tijd over: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    if (tijdOver <= 0) {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('escapeTimer');
+        window.location.href = "verloren.html";
+    }
+
+    tijdOver--;
+    sessionStorage.setItem('escapeTimer', tijdOver);
+}
+
+function checkAnswers() {
+    let correct = true;
+    for (let id in answers) {
+        const input = document.getElementById(id);
+        if (input) {
+            const ingevuld = input.value.toUpperCase();
+            const juist = answers[id];
+            if (ingevuld !== juist) {
+                correct = false;
+                input.style.border = "2px solid #f72585";
+            } else {
+                input.style.border = "2px solid #4cc9f0";
+            }
+        }
+    }
+
+    const feedback = document.getElementById("feedback");
+    feedback.style.display = "block";
+
+    if (correct) {
+        feedback.textContent = "Goed gedaan! Alles is correct ingevuld!";
+        feedback.className = "success";
+        clearInterval(timerInterval);
+        sessionStorage.setItem('escapeTimer', tijdOver); // Tijd opslaan voor volgende pagina
+        setTimeout(() => {
+            window.location.href = "raden.html";
+        }, 1500);
+    } else {
+        feedback.textContent = "Er zitten nog fouten in je puzzel. Probeer opnieuw.";
+        feedback.className = "error";
+    }
+}
+  document.getElementById("checkBtn").addEventListener("click", checkAnswers);
+
+  // Automatisch hoofdletters
+  document.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", () => {
+      input.value = input.value.toUpperCase();
+    });
+  });
+
+  document.querySelectorAll('.cell input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const id = e.target.id;
+      const [row, col] = id.split('-').map(Number);
+      e.target.value = e.target.value.toUpperCase().slice(0,1);
+      
+      // Zoek volgende input in dezelfde rij (horizontaal)
+      let nextCol = col + 1;
+      let nextInput = document.getElementById(`${row}-${nextCol}`);
+      while (nextInput && nextInput.parentElement.querySelector('.block')) {
+        nextCol++;
+        nextInput = document.getElementById(`${row}-${nextCol}`);
+      }
+      if (nextInput) {
+        nextInput.focus();
+      }
+    });
+    
+    input.addEventListener('keydown', e => {
+      // Backspace naar vorige input
+      if (e.key === 'Backspace') {
+        const id = e.target.id;
+        const [row, col] = id.split('-').map(Number);
+        if (e.target.value === '') {
+          let prevCol = col - 1;
+          let prevInput = document.getElementById(`${row}-${prevCol}`);
+          while (prevInput && prevInput.parentElement.querySelector('.block')) {
+            prevCol--;
+            prevInput = document.getElementById(`${row}-${prevCol}`);
+          }
+          if (prevInput) {
+            prevInput.focus();
+          }
+        }
+      }
+    });
+  });
+  </script>
+</body>
+</html>
